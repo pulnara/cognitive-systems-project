@@ -56,8 +56,8 @@ window.addEventListener('load', (event) => {
 
     /* prawie znalazlam cene, ale trzeba dac chyba jakis event na wyklikanie parametrow
     przyda sie do zliczania ceny, tak mysle tez, ze fajnie byloby pousuwac te wszystkie napisy "deal",
-    liczniki ile do konca promocji
-    i zmienic kolor z czerwonego na jakis neutralny (np. szary) albo wlasnie taki niemily dla oka (mocno czerwony?)
+    liczniki ile do konca promocji i zmienic kolor z czerwonego na jakis neutralny
+    (np. czarny tekst na bialym tle) albo wlasnie taki niemily dla oka (mocno czerwony?)
     przyklad wrzucam w pliku screen.png w repku :D */
     [...document.querySelectorAll("span")]
         .filter(el => el.textContent.includes('US $'))
