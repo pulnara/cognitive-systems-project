@@ -38,12 +38,16 @@ window.addEventListener('load', (event) => {
             .forEach(el => el.style.visibility = "hidden");
 
         const coupons = Array.from(document.getElementsByClassName("product-coupon"))
-            ,discountInfo = Array.from(document.getElementsByClassName("uniform-banner-box-discounts"))
-            ,hurryUpInfo = Array.from(document.getElementsByClassName("uniform-banner-slogan")).filter(isTextToHide)
-            ,quantityInfo = Array.from(document.getElementsByClassName("product-quantity-info"))
-            ,soldNumber = Array.from(document.getElementsByClassName("product-reviewer-sold"))
-            ,wishlistNum = Array.from(document.getElementsByClassName("add-wishlist-num"))
-            ,elementsToRemove = Array.from(new Set(coupons.concat(discountInfo, hurryUpInfo, quantityInfo, wishlistNum, soldNumber)))
+            , discountInfo = Array.from(document.getElementsByClassName("uniform-banner-box-discounts"))
+            , hurryUpInfo = Array.from(document.getElementsByClassName("uniform-banner-slogan")).filter(isTextToHide)
+            , quantityInfo = Array.from(document.getElementsByClassName("product-quantity-info"))
+            , soldNumber = Array.from(document.getElementsByClassName("product-reviewer-sold"))
+            , wishlistNum = Array.from(document.getElementsByClassName("add-wishlist-num"))
+            , oldPrice = Array.from(document.getElementsByClassName("product-price-original"))
+            ,
+            elementsToRemove = Array.from(new Set(
+                coupons.concat(discountInfo, hurryUpInfo, quantityInfo, wishlistNum, soldNumber, oldPrice)
+            ))
 
         elementsToRemove
             // .forEach(el => el.style.visibility = "hidden");
