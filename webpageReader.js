@@ -1,5 +1,11 @@
 window.addEventListener('load', (event) => {
 
+    var intervalId = window.setInterval(function(){
+        let newBuyButton = document.getElementsByClassName('buy-now-wrap')[0];
+        changeElementColor(newBuyButton, 'grey', 'white');
+        newBuyButton.addEventListener('click', buyNowHandler);
+    }, 1000);
+
     var allElements = document.querySelectorAll("*");
     var buyNowButton = Array.from(allElements).find(v => v.textContent === 'Buy Now');
     var addToCartButton = Array.from(allElements).find(v => v.textContent === 'Add to Cart');
@@ -29,7 +35,7 @@ window.addEventListener('load', (event) => {
     }
 
     function removeElementsCausingProductDesire() {
-        changeElementColor(buyNowButton, 'lightgrey', 'white');
+        // changeElementColor(buyNowButton, 'lightgrey', 'white');
 
         const imgs = getImgsToRemove()
 
@@ -72,7 +78,7 @@ window.addEventListener('load', (event) => {
             })
         }
 
-        changeElementColor(buyNowButton, 'lightgrey', 'white');
+        changeElementColor(buyNowButton, 'grey', 'white');
     }
 
     function changeElementColor(element, backgroundColor, color) {
@@ -122,30 +128,21 @@ window.addEventListener('load', (event) => {
         return parseFloat(match[0]);
     }
 
-    /* prawie znalazlam cene, ale trzeba dac chyba jakis event na wyklikanie parametrow
-    przyda sie do zliczania ceny, tak mysle tez, ze fajnie byloby pousuwac te wszystkie napisy "deal",
-    liczniki ile do konca promocji i zmienic kolor z czerwonego na jakis neutralny
-    (np. czarny tekst na bialym tle) albo wlasnie taki niemily dla oka (mocno czerwony?)
-    przyklad wrzucam w pliku screen.png w repku :D */
-    [...document.querySelectorAll("span")]
-        .filter(el => el.textContent.includes('US $'))
-        .forEach(el => console.log(el.textContent));
-
     removeElementsCausingProductDesire()
 
     buyNowButton.addEventListener('click', buyNowHandler);
 
-    let newBuyButton = null;
+    // let newBuyButton = null;
     productProperties.addEventListener('click', () => {
         console.log('property clicked');
 
-        if (newBuyButton != null) newBuyButton.removeEventListener('click', buyNowHandler);
+        // if (newBuyButton != null) newBuyButton.removeEventListener('click', buyNowHandler);
         //else buyNowButton.removeEventListener('click', buyNowHandler);
 
-        //newBuyButton = document.querySelector('#root > div > div.product-main > div > div.product-info > div.product-action > span.buy-now-wrap');
-        newBuyButton = document.getElementsByClassName('buy-now-wrap')[0];
-        changeElementColor(newBuyButton, 'lightgrey', 'white');
-
-        newBuyButton.addEventListener('click', buyNowHandler);
+        // newBuyButton = document.querySelector('#root > div > div.product-main > div > div.product-info > div.product-action > span.buy-now-wrap');
+        // newBuyButton = document.getElementsByClassName('buy-now-wrap')[0];
+        // changeElementColor(newBuyButton, 'grey', 'white');
+        //
+        // newBuyButton.addEventListener('click', buyNowHandler);
     });
 });
