@@ -1,6 +1,6 @@
 {
   "manifest_version": 2,
-  "version": "1.0",
+  "version": "1.1",
   "name": "Your e-shopping sergeant",
   "description": "A Google Chrome extension for compulsive shoppers!",
   "icons": {
@@ -15,7 +15,8 @@
   "content_scripts": [
     {
       "matches": [
-        "*://www.aliexpress.com/item/*"
+        "*://www.aliexpress.com/item/*",
+        "*://pl.aliexpress.com/item/*"
       ],
       "js": [
         "webpageReader.js"

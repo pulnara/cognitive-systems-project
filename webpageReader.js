@@ -46,7 +46,7 @@ window.addEventListener('load', (event) => {
             , oldPrice = Array.from(document.getElementsByClassName("product-price-original"))
             ,
             elementsToRemove = Array.from(new Set(
-                coupons.concat(discountInfo, hurryUpInfo, quantityInfo, wishlistNum, soldNumber, oldPrice)
+                coupons.concat(coupons, discountInfo, hurryUpInfo, quantityInfo, wishlistNum, soldNumber, oldPrice)
             ))
 
         elementsToRemove
