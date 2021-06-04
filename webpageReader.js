@@ -1,19 +1,19 @@
 window.addEventListener('load', (event) => {
 
-    var intervalId = window.setInterval(function(){
-        let newBuyButton = document.getElementsByClassName('buy-now-wrap')[0];
-        changeElementColor(newBuyButton, 'grey', 'white');
-        newBuyButton.addEventListener('click', buyNowHandler);
-    }, 1000);
+    // var intervalId = window.setInterval(function(){
+    //     let newBuyButton = document.getElementsByClassName('buy-now-wrap')[0];
+    //     changeElementColor(newBuyButton, 'grey', 'white');
+    //     newBuyButton.addEventListener('click', buyNowHandler);
+    // }, 1000);
 
     var allElements = document.querySelectorAll("*");
     var buyNowButton = Array.from(allElements).find(v => v.textContent === 'Buy Now');
     var addToCartButton = Array.from(allElements).find(v => v.textContent === 'Add to Cart');
-    var productProperties = document.getElementsByClassName('product-sku')[0];
+
+    const buyNowButtonClass = 'buy-now-wrap';
 
     console.log(buyNowButton ? 'found!' : 'not found');
     console.log(addToCartButton ? 'found!' : 'not found');
-    console.log(productProperties ? 'found!' : 'not found');
 
     function isTextToHide(element) {
         return element.textContent.includes('pieces available') ||
@@ -35,8 +35,6 @@ window.addEventListener('load', (event) => {
     }
 
     function removeElementsCausingProductDesire() {
-        // changeElementColor(buyNowButton, 'lightgrey', 'white');
-
         const imgs = getImgsToRemove()
 
         for (const img of imgs) {
@@ -88,11 +86,13 @@ window.addEventListener('load', (event) => {
         });
     }
 
-    function buyNowHandler(event) {
+    function productActionHandler(event) {
         console.log('Buy Now clicked');
-        if(event.target.parentElement && !event.target.parentElement.ariaHasPopup) {
-            console.log('ready to buy');
+        console.log(event.target.parentElement);
+        const targetButton = event.target.parentElement;
 
+        if (targetButton.className === buyNowButtonClass && !targetButton.ariaHasPopup) {
+            console.log('ready to buy');
             const price = getPrice();
             console.log(price);
 
@@ -130,19 +130,15 @@ window.addEventListener('load', (event) => {
 
     removeElementsCausingProductDesire()
 
-    buyNowButton.addEventListener('click', buyNowHandler);
+    const productAction = document.getElementsByClassName('product-action')[0];
+    productAction.addEventListener('click', productActionHandler);
 
-    // let newBuyButton = null;
-    productProperties.addEventListener('click', () => {
-        console.log('property clicked');
-
-        // if (newBuyButton != null) newBuyButton.removeEventListener('click', buyNowHandler);
-        //else buyNowButton.removeEventListener('click', buyNowHandler);
-
-        // newBuyButton = document.querySelector('#root > div > div.product-main > div > div.product-info > div.product-action > span.buy-now-wrap');
-        // newBuyButton = document.getElementsByClassName('buy-now-wrap')[0];
-        // changeElementColor(newBuyButton, 'grey', 'white');
-        //
-        // newBuyButton.addEventListener('click', buyNowHandler);
-    });
+    const observer = new MutationObserver(mutations => {
+        console.log('product-action changed');
+        let newBuyNowButton = mutations.flatMap(mutation => Array.from(mutation.addedNodes)).find(node => node.className === buyNowButtonClass);
+        if (newBuyNowButton != null) {
+            changeElementColor(newBuyNowButton, 'grey', 'white');
+        }
+    })
+    observer.observe(productAction, { childList: true });
 });
