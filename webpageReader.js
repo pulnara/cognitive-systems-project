@@ -1,11 +1,5 @@
 window.addEventListener('load', (event) => {
 
-    // var intervalId = window.setInterval(function(){
-    //     let newBuyButton = document.getElementsByClassName('buy-now-wrap')[0];
-    //     changeElementColor(newBuyButton, 'grey', 'white');
-    //     newBuyButton.addEventListener('click', buyNowHandler);
-    // }, 1000);
-
     var allElements = document.querySelectorAll("*");
     var buyNowButton = Array.from(allElements).find(v => v.textContent === 'Buy Now');
     var addToCartButton = Array.from(allElements).find(v => v.textContent === 'Add to Cart');
@@ -87,10 +81,7 @@ window.addEventListener('load', (event) => {
     }
 
     function productActionHandler(event) {
-        console.log('Buy Now clicked');
-        console.log(event.target.parentElement);
         const targetButton = event.target.parentElement;
-
         if (targetButton.className === buyNowButtonClass && !targetButton.ariaHasPopup) {
             console.log('ready to buy');
             const price = getPrice();
@@ -134,11 +125,8 @@ window.addEventListener('load', (event) => {
     productAction.addEventListener('click', productActionHandler);
 
     const observer = new MutationObserver(mutations => {
-        console.log('product-action changed');
         let newBuyNowButton = mutations.flatMap(mutation => Array.from(mutation.addedNodes)).find(node => node.className === buyNowButtonClass);
-        if (newBuyNowButton != null) {
-            changeElementColor(newBuyNowButton, 'grey', 'white');
-        }
+        if (newBuyNowButton != null) changeElementColor(newBuyNowButton, 'grey', 'white');
     })
     observer.observe(productAction, { childList: true });
 });
