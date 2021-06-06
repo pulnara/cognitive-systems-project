@@ -6,9 +6,6 @@ window.addEventListener('load', (event) => {
 
     const buyNowButtonClass = 'buy-now-wrap';
 
-    console.log(buyNowButton ? 'found!' : 'not found');
-    console.log(addToCartButton ? 'found!' : 'not found');
-
     function isTextToHide(element) {
         return element.textContent.includes('pieces available') ||
             element.textContent.includes('% off') ||
@@ -80,6 +77,63 @@ window.addEventListener('load', (event) => {
         });
     }
 
+    function findAlternativeUsesOfMoney(price) {
+        let items = new Map();
+        items.set('Pumpkin Spice Latte', 5.25);
+        items.set('Bread', 2.50);
+        items.set('Hot Dog', 1);
+        items.set('Scratch-off lottery ticket', 1);
+        items.set('McDonald\'s Bacon McDouble', 2);
+        items.set('Pepperoni Pizza', 11.99);
+        items.set('Bud Light 6-pack', 5.79);
+        items.set('Taco Bell taco', 1.99);
+        items.set('Lipstick', 5);
+        items.set('Fancy restaurant dinner', 50);
+
+        return [...items].filter(function ([itemName, itemPrice]) {
+            return (itemPrice < price);
+        }).map(function ([itemName, itemPrice]) {
+            return [itemName, Math.round(price / itemPrice)];
+        });
+    }
+
+    function cancelRedirect(event) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+    }
+
+    function validateReasonsInput(reasonsString) {
+        const reasons = reasonsString.split(',');
+        console.log(reasons);
+        if (reasons.length < 3) {
+            return false;
+        }
+        return !reasons.some(function (reason) {
+            return reason.length < 5;
+        });
+    }
+
+    function createAlternativeUsesOfMoneyMessage(price) {
+        return "The price if this item is " + price + "$.\n" +
+            "With this money, you could buy:\n" +
+            findAlternativeUsesOfMoney(price)
+                .map(function ([name, count]) {
+                        return "- " + count + " " + name + "s"
+                    }
+                ).join(" or \n") +
+            "\nAre you still sure you want to buy this?";
+    }
+
+    function askToListReasonsForBuying(event) {
+        let reasons = prompt("List at least 3 reasons (separated by comma) why you need this thing.");
+        if (reasons == null || reasons === "") {
+            cancelRedirect(event);
+        } else if (!validateReasonsInput(reasons)) {
+            alert("Insufficient explanation, sorry! :(");
+            cancelRedirect(event);
+        }
+    }
+
     function productActionHandler(event) {
         const targetButton = event.target.parentElement;
         if (targetButton.className === buyNowButtonClass && !targetButton.ariaHasPopup) {
@@ -87,8 +141,16 @@ window.addEventListener('load', (event) => {
             const price = getPrice();
             console.log(price);
 
+            if (confirm("Are you completely sure you need this?") === true &&
+                confirm("Are you really going to use it?") === true &&
+                confirm(createAlternativeUsesOfMoneyMessage(price)) === true) {
+                        askToListReasonsForBuying(event);
+            } else {
+                cancelRedirect(event);
+            }
+
             // to raczej tymczasowe do testowania
-            chrome.runtime.sendMessage({ type: 'buying', message: price });
+            // chrome.runtime.sendMessage({type: 'buying', message: price});
         }
     }
 
