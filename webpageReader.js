@@ -3,8 +3,33 @@ window.addEventListener('load', (event) => {
     var allElements = document.querySelectorAll("*");
     var buyNowButton = Array.from(allElements).find(v => v.textContent === 'Buy Now');
     var addToCartButton = Array.from(allElements).find(v => v.textContent === 'Add to Cart');
-
+    const noButtonId = 'nobutton';
+    const yesButtonId = 'yesbutton';
+    const popupId = 'chromeextensionpopup';
     const buyNowButtonClass = 'buy-now-wrap';
+
+    function popup(text, yesCallback, noCallback) {
+        if (document.getElementById(popupId)) {
+            return;
+        }
+        const div = document.createElement("div");
+        div.setAttribute("id", popupId);
+        div.innerText = text;
+        document.body.appendChild(div);
+
+        for (const buttonId of [yesButtonId, noButtonId]) {
+            const button = document.createElement("button");
+            button.setAttribute("id", buttonId);
+            document.getElementById(popupId).appendChild(button);
+            button.innerText = (buttonId === noButtonId) ? 'No' : 'Yes';
+            document.getElementById(buttonId).addEventListener("click", function () {
+                document.getElementById(buttonId).outerHTML = '';
+                document.getElementById(popupId).outerHTML = '';
+                (buttonId === noButtonId) ? noCallback() : yesCallback();
+            });
+        }
+
+    }
 
     function isTextToHide(element) {
         return element.textContent.includes('pieces available') ||
@@ -114,43 +139,62 @@ window.addEventListener('load', (event) => {
     }
 
     function createAlternativeUsesOfMoneyMessage(price) {
-        return "The price if this item is " + price + "$.\n" +
+        return "The price if this item is " + price + "$!\n" +
             "With this money, you could buy:\n" +
             findAlternativeUsesOfMoney(price)
                 .map(function ([name, count]) {
-                        return "- " + count + " " + name + "s"
+                        return "- " + count + " " + name + ((count > 1) ? 's' : '')
                     }
-                ).join(" or \n") +
+                ).join(", or \n") +
             "\nAre you still sure you want to buy this?";
     }
 
     function askToListReasonsForBuying(event) {
         let reasons = prompt("List at least 3 reasons (separated by comma) why you need this thing.");
         if (reasons == null || reasons === "") {
-            cancelRedirect(event);
+            return false;
         } else if (!validateReasonsInput(reasons)) {
             alert("Insufficient explanation, sorry! :(");
-            cancelRedirect(event);
+            return false;
         }
+        return true;
     }
 
+    let shouldPropagateInNextEventTrigger = false;
+
     function productActionHandler(event) {
-        const targetButton = event.target.parentElement;
-        if (targetButton.className === buyNowButtonClass && !targetButton.ariaHasPopup) {
-            console.log('ready to buy');
-            const price = getPrice();
-            console.log(price);
+        if (!shouldPropagateInNextEventTrigger) {
+            const targetButton = event.target.parentElement;
+            if (targetButton.className === buyNowButtonClass && !targetButton.ariaHasPopup) {
+                console.log('ready to buy');
+                const price = getPrice();
+                console.log(price);
 
-            if (confirm("Are you completely sure you need this?") === true &&
-                confirm("Are you really going to use it?") === true &&
-                confirm(createAlternativeUsesOfMoneyMessage(price)) === true) {
-                        askToListReasonsForBuying(event);
-            } else {
-                cancelRedirect(event);
+                const eventCopy = $.extend(true, {}, event);
+                event.stopPropagation();
+
+                popup("Are you completely sure you need this?",
+                    function () {
+                        popup("Are you really going to use it?",
+                            function () {
+                                popup(createAlternativeUsesOfMoneyMessage(price),
+                                    function () {
+                                        if (askToListReasonsForBuying(event) === true) {
+                                            popup("This is your last chance to save " + price + "$!\n" +
+                                                "Are you 100% sure you want to spend this money?",
+                                                function () {
+                                                    shouldPropagateInNextEventTrigger = true;
+                                                    $(eventCopy.target).trigger(eventCopy);
+                                                }, function () {
+                                                })
+                                        }
+                                    }, function () {
+                                    })
+                            }, function () {
+                            })
+                    }, function () {
+                    })
             }
-
-            // to raczej tymczasowe do testowania
-            // chrome.runtime.sendMessage({type: 'buying', message: price});
         }
     }
 
@@ -190,5 +234,5 @@ window.addEventListener('load', (event) => {
         let newBuyNowButton = mutations.flatMap(mutation => Array.from(mutation.addedNodes)).find(node => node.className === buyNowButtonClass);
         if (newBuyNowButton != null) changeElementColor(newBuyNowButton, 'grey', 'white');
     })
-    observer.observe(productAction, { childList: true });
+    observer.observe(productAction, {childList: true});
 });
