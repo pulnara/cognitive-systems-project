@@ -29,7 +29,6 @@ window.addEventListener('load', (event) => {
                 (buttonId === noButtonId) ? noCallback() : yesCallback();
             });
         }
-
     }
 
     function okPopup(text) {
@@ -49,7 +48,6 @@ window.addEventListener('load', (event) => {
             document.getElementById(okButtonId).outerHTML = '';
             document.getElementById(popupId).outerHTML = '';
         });
-
     }
 
     function isTextToHide(element) {
@@ -87,13 +85,15 @@ window.addEventListener('load', (event) => {
             , hurryUpInfo = Array.from(document.getElementsByClassName("uniform-banner-slogan")).filter(isTextToHide)
             , quantityInfo = Array.from(document.getElementsByClassName("product-quantity-info"))
             , soldNumber = Array.from(document.getElementsByClassName("product-reviewer-sold"))
+            , lowerPriceInfo = Array.from(document.getElementsByClassName("_1kyL5"))
             , wishlistNum = Array.from(document.getElementsByClassName("add-wishlist-num"))
             , oldPrice = Array.from(document.getElementsByClassName("product-price-original"))
             , timer = Array.from(document.getElementsByClassName("countDown"))
             , recommendations = Array.from(document.getElementsByClassName('may-like'))
             ,
             elementsToRemove = Array.from(new Set(
-                coupons.concat(discountInfo, hurryUpInfo, quantityInfo, wishlistNum, soldNumber, oldPrice, timer, recommendations)
+                coupons.concat(discountInfo, hurryUpInfo, quantityInfo, wishlistNum, soldNumber,
+                    oldPrice, timer, recommendations, lowerPriceInfo)
             ))
 
         elementsToRemove
@@ -125,15 +125,14 @@ window.addEventListener('load', (event) => {
 
     function findAlternativeUsesOfMoney(price) {
         let items = new Map();
-        items.set('Pumpkin Spice Latte', 5.25);
+        items.set('Starbucks Pumpkin Spice Latte', 5.25);
         items.set('Bread', 2.50);
         items.set('Hot Dog', 1);
-        items.set('Scratch-off lottery ticket', 1);
         items.set('McDonald\'s Bacon McDouble', 2);
         items.set('Pepperoni Pizza', 11.99);
         items.set('Bud Light 6-pack', 5.79);
         items.set('Taco Bell taco', 1.99);
-        items.set('Lipstick', 5);
+        items.set('Mac Lipstick', 12);
         items.set('Fancy restaurant dinner', 50);
 
         return [...items].filter(function ([itemName, itemPrice]) {
@@ -141,11 +140,6 @@ window.addEventListener('load', (event) => {
         }).map(function ([itemName, itemPrice]) {
             return [itemName, Math.round(price / itemPrice)];
         });
-    }
-
-    function cancelRedirect(event) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
     }
 
     function validateReasonsInput(reasonsString) {
@@ -170,7 +164,7 @@ window.addEventListener('load', (event) => {
             "\nAre you still sure you want to buy this?";
     }
 
-    function askToListReasonsForBuying(event) {
+    function askToListReasonsForBuying() {
         let reasons = prompt("List at least 3 reasons (separated by comma) why you need this thing.");
         if (reasons == null || reasons === "") {
             return false;
@@ -180,8 +174,6 @@ window.addEventListener('load', (event) => {
         }
         return true;
     }
-
-    //let shouldPropagateInNextEventTrigger = false;
 
     function productActionHandler(event) {
         if (event.isTrusted) {
@@ -196,8 +188,8 @@ window.addEventListener('load', (event) => {
                 handleLimit(price,
                     (diff, info) => {
                         if (diff != null) {
-                            let text = `There is only ${(info.limit - info.spendingInPeriod).toFixed(2)} left till you reach the limit. `;
-                            text += diff !== 0 ? `If you make this purchase you will have ${Math.abs(diff).toFixed(2)} left.\n` :
+                            let text = `There is only ${(info.limit - info.spendingInPeriod).toFixed(2)}$ left till you reach the limit. `;
+                            text += diff !== 0 ? `If you make this purchase you will have ${Math.abs(diff).toFixed(2)}$ left.\n` :
                                 `This will be your last purchase in this time period.\n`;
                             if (info.spendingInPeriod !== 0) text += ` You have already spent ${info.spendingInPeriod.toFixed(2)} during this period.`;
                             if (info.totalSpending !== 0) text += ` You have already spent ${info.totalSpending.toFixed(2)} in total.`;
@@ -224,26 +216,21 @@ window.addEventListener('load', (event) => {
                     function () {
                         popup(createAlternativeUsesOfMoneyMessage(price),
                             function () {
-                                if (askToListReasonsForBuying(event) === true) {
+                                if (askToListReasonsForBuying() === true) {
                                     popup("This is your last chance to save " + price.toFixed(2) + "$!\n" +
                                         "Are you 100% sure you want to spend this money?",
-                                        function () {
-                                            //shouldPropagateInNextEventTrigger = true;
+                                        () => {
                                             recordPurchase(price,
                                                 () => $(eventCopy.target).trigger(eventCopy),
                                                 diff => {
                                                     okPopup(`Making this purchase you would cause you to exceed the limit by ${diff.toFixed(2)}.
                                                     You cannot proceed, sorry!`);
                                                 })
-                                        }, function () {
-                                        })
+                                        }, () => {})
                                 }
-                            }, function () {
-                            })
-                    }, function () {
-                    })
-            }, function () {
-            })
+                            }, () => {})
+                    }, () => {})
+            }, () => {})
     }
 
     function getPrice() {
