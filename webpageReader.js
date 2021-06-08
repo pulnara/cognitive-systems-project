@@ -3,11 +3,52 @@ window.addEventListener('load', (event) => {
     var allElements = document.querySelectorAll("*");
     var buyNowButton = Array.from(allElements).find(v => v.textContent === 'Buy Now');
     var addToCartButton = Array.from(allElements).find(v => v.textContent === 'Add to Cart');
-
+    const noButtonId = 'nobutton';
+    const yesButtonId = 'yesbutton';
+    const okButtonId ='okbutton';
+    const popupId = 'chromeextensionpopup';
     const buyNowButtonClass = 'buy-now-wrap';
 
-    console.log(buyNowButton ? 'found!' : 'not found');
-    console.log(addToCartButton ? 'found!' : 'not found');
+    function popup(text, yesCallback, noCallback) {
+        if (document.getElementById(popupId)) {
+            return;
+        }
+        const div = document.createElement("div");
+        div.setAttribute("id", popupId);
+        div.innerText = text;
+        document.body.appendChild(div);
+
+        for (const buttonId of [yesButtonId, noButtonId]) {
+            const button = document.createElement("button");
+            button.setAttribute("id", buttonId);
+            document.getElementById(popupId).appendChild(button);
+            button.innerText = (buttonId === noButtonId) ? 'No' : 'Yes';
+            document.getElementById(buttonId).addEventListener("click", function () {
+                document.getElementById(buttonId).outerHTML = '';
+                document.getElementById(popupId).outerHTML = '';
+                (buttonId === noButtonId) ? noCallback() : yesCallback();
+            });
+        }
+    }
+
+    function okPopup(text) {
+        if (document.getElementById(popupId)) {
+            return;
+        }
+        const div = document.createElement("div");
+        div.setAttribute("id", popupId);
+        div.innerText = text;
+        document.body.appendChild(div);
+
+        const button = document.createElement("button");
+        button.setAttribute("id", okButtonId);
+        document.getElementById(popupId).appendChild(button);
+        button.innerText = 'OK';
+        document.getElementById(okButtonId).addEventListener("click", function () {
+            document.getElementById(okButtonId).outerHTML = '';
+            document.getElementById(popupId).outerHTML = '';
+        });
+    }
 
     function isTextToHide(element) {
         return element.textContent.includes('pieces available') ||
@@ -44,13 +85,15 @@ window.addEventListener('load', (event) => {
             , hurryUpInfo = Array.from(document.getElementsByClassName("uniform-banner-slogan")).filter(isTextToHide)
             , quantityInfo = Array.from(document.getElementsByClassName("product-quantity-info"))
             , soldNumber = Array.from(document.getElementsByClassName("product-reviewer-sold"))
+            , lowerPriceInfo = Array.from(document.getElementsByClassName("_1kyL5"))
             , wishlistNum = Array.from(document.getElementsByClassName("add-wishlist-num"))
             , oldPrice = Array.from(document.getElementsByClassName("product-price-original"))
             , timer = Array.from(document.getElementsByClassName("countDown"))
             , recommendations = Array.from(document.getElementsByClassName('may-like'))
             ,
             elementsToRemove = Array.from(new Set(
-                coupons.concat(discountInfo, hurryUpInfo, quantityInfo, wishlistNum, soldNumber, oldPrice, timer, recommendations)
+                coupons.concat(discountInfo, hurryUpInfo, quantityInfo, wishlistNum, soldNumber,
+                    oldPrice, timer, recommendations, lowerPriceInfo)
             ))
 
         elementsToRemove
@@ -74,22 +117,120 @@ window.addEventListener('load', (event) => {
     }
 
     function changeElementColor(element, backgroundColor, color) {
-        [...element.children].forEach(el => {
+        [...element.children, element].forEach(el => {
             el.style.backgroundColor = backgroundColor;
             el.style.color = color;
         });
     }
 
-    function productActionHandler(event) {
-        const targetButton = event.target.parentElement;
-        if (targetButton.className === buyNowButtonClass && !targetButton.ariaHasPopup) {
-            console.log('ready to buy');
-            const price = getPrice();
-            console.log(price);
+    function findAlternativeUsesOfMoney(price) {
+        let items = new Map();
+        items.set('Starbucks Pumpkin Spice Latte', 5.25);
+        items.set('Bread', 2.50);
+        items.set('Hot Dog', 1);
+        items.set('McDonald\'s Bacon McDouble', 2);
+        items.set('Pepperoni Pizza', 11.99);
+        items.set('Bud Light 6-pack', 5.79);
+        items.set('Taco Bell taco', 1.99);
+        items.set('Mac Lipstick', 12);
+        items.set('Fancy restaurant dinner', 50);
 
-            // to raczej tymczasowe do testowania
-            chrome.runtime.sendMessage({ type: 'buying', message: price });
+        return [...items].filter(function ([itemName, itemPrice]) {
+            return (itemPrice < price);
+        }).map(function ([itemName, itemPrice]) {
+            return [itemName, Math.round(price / itemPrice)];
+        });
+    }
+
+    function validateReasonsInput(reasonsString) {
+        const reasons = reasonsString.split(',');
+        console.log(reasons);
+        if (reasons.length < 3) {
+            return false;
         }
+        return !reasons.some(function (reason) {
+            return reason.length < 5;
+        });
+    }
+
+    function createAlternativeUsesOfMoneyMessage(price) {
+        return "The price of this item is " + price + "$!\n" +
+            "With this money, you could buy:\n" +
+            findAlternativeUsesOfMoney(price)
+                .map(function ([name, count]) {
+                        return "- " + count + " " + name + ((count > 1) ? 's' : '')
+                    }
+                ).join(", or \n") +
+            "\nAre you still sure you want to buy this?";
+    }
+
+    function askToListReasonsForBuying() {
+        let reasons = prompt("List at least 3 reasons (separated by comma) why you need this thing.");
+        if (reasons == null || reasons === "") {
+            return false;
+        } else if (!validateReasonsInput(reasons)) {
+            alert("Insufficient explanation, sorry! :(");
+            return false;
+        }
+        return true;
+    }
+
+    function productActionHandler(event) {
+        if (event.isTrusted) {
+            const targetButton = event.target.parentElement;
+            if (targetButton.className === buyNowButtonClass && !targetButton.ariaHasPopup) {
+                const price = getPrice();
+                console.log(price);
+
+                const eventCopy = $.extend(true, {}, event);
+                event.stopPropagation();
+
+                handleLimit(price,
+                    (diff, info) => {
+                        if (diff != null) {
+                            let text = `There is only ${(info.limit - info.spendingInPeriod).toFixed(2)}$ left till you reach the limit. `;
+                            text += diff !== 0 ? `If you make this purchase you will have ${Math.abs(diff).toFixed(2)}$ left.\n` :
+                                `This will be your last purchase in this time period.\n`;
+                            if (info.spendingInPeriod !== 0) text += ` You have already spent ${info.spendingInPeriod.toFixed(2)} during this period.`;
+                            if (info.totalSpending !== 0) text += ` You have already spent ${info.totalSpending.toFixed(2)} in total.`;
+                            text += `\nDo you want to continue?`;
+                            popup(text, () => showConfirmationPopups(price, eventCopy), () => {});
+                        }
+                        else {
+                            showConfirmationPopups(price, eventCopy);
+                        }
+                    },
+                        diff => {
+                            okPopup(`Making this purchase you would cause you to exceed the limit by ${diff.toFixed(2)}.
+                            You cannot proceed, sorry!`);
+                        }
+                );
+            }
+        }
+    }
+
+    function showConfirmationPopups(price, eventCopy) {
+        popup("Are you completely sure you need this?",
+            function () {
+                popup("Are you really going to use it?",
+                    function () {
+                        popup(createAlternativeUsesOfMoneyMessage(price),
+                            function () {
+                                if (askToListReasonsForBuying() === true) {
+                                    popup("This is your last chance to save " + price.toFixed(2) + "$!\n" +
+                                        "Are you 100% sure you want to spend this money?",
+                                        () => {
+                                            recordPurchase(price,
+                                                () => $(eventCopy.target).trigger(eventCopy),
+                                                diff => {
+                                                    okPopup(`Making this purchase you would cause you to exceed the limit by ${diff.toFixed(2)}.
+                                                    You cannot proceed, sorry!`);
+                                                })
+                                        }, () => {})
+                                }
+                            }, () => {})
+                    }, () => {})
+            }, () => {})
     }
 
     function getPrice() {
@@ -125,8 +266,9 @@ window.addEventListener('load', (event) => {
     productAction.addEventListener('click', productActionHandler);
 
     const observer = new MutationObserver(mutations => {
-        let newBuyNowButton = mutations.flatMap(mutation => Array.from(mutation.addedNodes)).find(node => node.className === buyNowButtonClass);
+        let newBuyNowButton = mutations.flatMap(mutation => Array.from(mutation.addedNodes))
+            .find(node => node.className === buyNowButtonClass || node.className === 'next-btn next-large next-btn-primary buynow')
         if (newBuyNowButton != null) changeElementColor(newBuyNowButton, 'grey', 'white');
     })
-    observer.observe(productAction, { childList: true });
+    observer.observe(productAction, { childList: true, subtree: true });
 });

@@ -1,0 +1,67 @@
+#chromeextensionpopup {
+    background: white;
+    border: solid 3px black;
+    line-height: 25px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-right: -50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    width: 40%;
+    height: 40%;
+    z-index: 999999999;
+    padding: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: medium;
+}
+
+#yesbutton {
+    background: grey;
+    color: white;
+    cursor: pointer;
+    float: bottom;
+    text-align: center;
+    font-size: 1rem;
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    border: 0;
+    padding: 0.5rem 1rem;
+    margin: 0.25rem;
+    font-family: system-ui, sans-serif;
+}
+
+#nobutton {
+    background: green;
+    color: white;
+    cursor: pointer;
+    float: bottom;
+    text-align: center;
+    font-size: 1rem;
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    border: 0;
+    padding: 0.5rem 1rem;
+    margin: 0.25rem;
+    font-family: system-ui, sans-serif;
+}
+
+#okbutton {
+    background: black;
+    color: white;
+    cursor: pointer;
+    float: bottom;
+    text-align: center;
+    font-size: 1.1rem;
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    border: 0;
+    padding: 0.5rem 1rem;
+    margin: 0.25rem;
+    font-family: system-ui, sans-serif;
+}

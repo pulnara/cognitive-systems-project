@@ -1,12 +1,62 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Hello world </title>
-    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="popup.css">
     <script src="popup.js"></script>
+    <script src="budgetService.js"></script>
 </head>
 <body>
-<h1 id="headingText">Hello World!</h1>
-<input type="text" id="inputText">
+    <div id="extensionPopup" class="popup">
+
+        <div class="popup-title">
+            <h1> Your e-shopping sergeant </h1>
+        </div>
+
+        <div class="popup-content">
+            <div id="general-info">
+                <p>
+                    <div id="total-spending"></div>
+                    <div id="since"></div>
+                </p>
+            </div>
+
+            <div id="limit-info">
+                <p id="limit-value"></p>
+                <p id="spending-in-period"></p>
+                <p>
+                    <div id="from"></div>
+                    <div id="to"></div>
+                </p>
+            </div>
+        </div>
+
+        <div class="popup-footer">
+            <button id="set-limit-button" type="button" class="popup-button">Set limit</button>
+            <button id="cancel-limit-button" type="button" class="popup-button">Cancel limit</button>
+
+            <div class="popup-form" id="set-limit">
+                <p>
+                    <label for="limit">Limit</label>
+                    <input type="number" id="limit" name="limit" value="50"  min="0" class="form-input"/>
+                </p>
+                <div class="multiple-inputs">
+                    <p>
+                        <label for="duration">Duration</label>
+                        <input type="number" id="duration" name="duration" value="1" min="1" class="form-input"/>
+                        <select id="period-type" name="period-type" class="form-input">
+                            <option value="minute">Minute/minutes</option>
+                            <option value="hour">Hour/hours</option>
+                            <option value="day">Day/days</option>
+                            <option value="week">Week/weeks</option>
+                            <option value="month">Month/month</option>
+                            <option value="year">Year/years</option>
+                        </select>
+                    </p>
+                </div>
+                <button id="save-limit-button" type="button" class="popup-button">Set limit</button>
+            </div>
+        </div>
+
+    </div>
 </body>
 </html>
