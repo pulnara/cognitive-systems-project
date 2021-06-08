@@ -5,6 +5,7 @@ window.addEventListener('load', (event) => {
     var addToCartButton = Array.from(allElements).find(v => v.textContent === 'Add to Cart');
     const noButtonId = 'nobutton';
     const yesButtonId = 'yesbutton';
+    const okButtonId ='okbutton';
     const popupId = 'chromeextensionpopup';
     const buyNowButtonClass = 'buy-now-wrap';
 
@@ -28,6 +29,26 @@ window.addEventListener('load', (event) => {
                 (buttonId === noButtonId) ? noCallback() : yesCallback();
             });
         }
+
+    }
+
+    function okPopup(text) {
+        if (document.getElementById(popupId)) {
+            return;
+        }
+        const div = document.createElement("div");
+        div.setAttribute("id", popupId);
+        div.innerText = text;
+        document.body.appendChild(div);
+
+        const button = document.createElement("button");
+        button.setAttribute("id", okButtonId);
+        document.getElementById(popupId).appendChild(button);
+        button.innerText = 'OK';
+        document.getElementById(okButtonId).addEventListener("click", function () {
+            document.getElementById(okButtonId).outerHTML = '';
+            document.getElementById(popupId).outerHTML = '';
+        });
 
     }
 
@@ -96,7 +117,7 @@ window.addEventListener('load', (event) => {
     }
 
     function changeElementColor(element, backgroundColor, color) {
-        [...element.children].forEach(el => {
+        [...element.children, element].forEach(el => {
             el.style.backgroundColor = backgroundColor;
             el.style.color = color;
         });
@@ -139,7 +160,7 @@ window.addEventListener('load', (event) => {
     }
 
     function createAlternativeUsesOfMoneyMessage(price) {
-        return "The price if this item is " + price + "$!\n" +
+        return "The price of this item is " + price + "$!\n" +
             "With this money, you could buy:\n" +
             findAlternativeUsesOfMoney(price)
                 .map(function ([name, count]) {
@@ -160,42 +181,69 @@ window.addEventListener('load', (event) => {
         return true;
     }
 
-    let shouldPropagateInNextEventTrigger = false;
+    //let shouldPropagateInNextEventTrigger = false;
 
     function productActionHandler(event) {
-        if (!shouldPropagateInNextEventTrigger) {
+        if (event.isTrusted) {
             const targetButton = event.target.parentElement;
             if (targetButton.className === buyNowButtonClass && !targetButton.ariaHasPopup) {
-                console.log('ready to buy');
                 const price = getPrice();
                 console.log(price);
 
                 const eventCopy = $.extend(true, {}, event);
                 event.stopPropagation();
 
-                popup("Are you completely sure you need this?",
+                handleLimit(price,
+                    (diff, info) => {
+                        if (diff != null) {
+                            let text = `There is only ${(info.limit - info.spendingInPeriod).toFixed(2)} left till you reach the limit. `;
+                            text += diff !== 0 ? `If you make this purchase you will have ${Math.abs(diff).toFixed(2)} left.\n` :
+                                `This will be your last purchase in this time period.\n`;
+                            if (info.spendingInPeriod !== 0) text += ` You have already spent ${info.spendingInPeriod.toFixed(2)} during this period.`;
+                            if (info.totalSpending !== 0) text += ` You have already spent ${info.totalSpending.toFixed(2)} in total.`;
+                            text += `\nDo you want to continue?`;
+                            popup(text, () => showConfirmationPopups(price, eventCopy), () => {});
+                        }
+                        else {
+                            showConfirmationPopups(price, eventCopy);
+                        }
+                    },
+                        diff => {
+                            okPopup(`Making this purchase you would cause you to exceed the limit by ${diff.toFixed(2)}.
+                            You cannot proceed, sorry!`);
+                        }
+                );
+            }
+        }
+    }
+
+    function showConfirmationPopups(price, eventCopy) {
+        popup("Are you completely sure you need this?",
+            function () {
+                popup("Are you really going to use it?",
                     function () {
-                        popup("Are you really going to use it?",
+                        popup(createAlternativeUsesOfMoneyMessage(price),
                             function () {
-                                popup(createAlternativeUsesOfMoneyMessage(price),
-                                    function () {
-                                        if (askToListReasonsForBuying(event) === true) {
-                                            popup("This is your last chance to save " + price + "$!\n" +
-                                                "Are you 100% sure you want to spend this money?",
-                                                function () {
-                                                    shouldPropagateInNextEventTrigger = true;
-                                                    $(eventCopy.target).trigger(eventCopy);
-                                                }, function () {
+                                if (askToListReasonsForBuying(event) === true) {
+                                    popup("This is your last chance to save " + price.toFixed(2) + "$!\n" +
+                                        "Are you 100% sure you want to spend this money?",
+                                        function () {
+                                            //shouldPropagateInNextEventTrigger = true;
+                                            recordPurchase(price,
+                                                () => $(eventCopy.target).trigger(eventCopy),
+                                                diff => {
+                                                    okPopup(`Making this purchase you would cause you to exceed the limit by ${diff.toFixed(2)}.
+                                                    You cannot proceed, sorry!`);
                                                 })
-                                        }
-                                    }, function () {
-                                    })
+                                        }, function () {
+                                        })
+                                }
                             }, function () {
                             })
                     }, function () {
                     })
-            }
-        }
+            }, function () {
+            })
     }
 
     function getPrice() {
@@ -231,8 +279,9 @@ window.addEventListener('load', (event) => {
     productAction.addEventListener('click', productActionHandler);
 
     const observer = new MutationObserver(mutations => {
-        let newBuyNowButton = mutations.flatMap(mutation => Array.from(mutation.addedNodes)).find(node => node.className === buyNowButtonClass);
+        let newBuyNowButton = mutations.flatMap(mutation => Array.from(mutation.addedNodes))
+            .find(node => node.className === buyNowButtonClass || node.className === 'next-btn next-large next-btn-primary buynow')
         if (newBuyNowButton != null) changeElementColor(newBuyNowButton, 'grey', 'white');
     })
-    observer.observe(productAction, {childList: true});
+    observer.observe(productAction, { childList: true, subtree: true });
 });

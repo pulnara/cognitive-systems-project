@@ -1,5 +1,105 @@
-h1 {
+body {
+    margin:0 !important;
+    width: 300px;
+}
+.popup {
+    overflow: auto;
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.popup-title {
+    background-color: #f3f1f1;
+    padding: 4% 7% 2%;
+}
+
+.popup-title h1 {
     font-weight: bold;
-    color: darkslategrey;
-    text-decoration: underline;
+    color: rgba(113, 5, 26, 0.87);
+    font-size: 170%;
+}
+
+.popup-content {
+    padding: 2% 7% 1%;
+    font-size: 120%;
+}
+
+.popup-footer {
+    padding: 1% 7% 7%;
+    overflow: hidden;
+}
+
+.popup-button {
+    width: 100%;
+    border: none;
+    background-color: rgba(94, 123, 66, 0.92);
+    color: #FFFFFF;
+    text-transform: uppercase;
+    font-size: 110%;
+    cursor: pointer;
+    text-align: center;
+    margin: 0;
+    padding: 7px 5px;
+    font-weight: bold;
+    display: none;
+}
+
+#cancel-limit-button {
+    background-color: rgba(113, 5, 26, 0.87);
+}
+
+#general-info {
+    font-size: 120%;
+}
+
+#limit-info {
+    display: none;
+    padding: 4% 0;
+    border-top: thin solid rgba(94, 123, 66, 0.92);
+    font-size: 110%;
+}
+
+#limit-info p {
+    margin: 10px 0;
+}
+
+.popup-form {
+    display: none;
+    padding: 5% 0 0;
+    border-top: thin solid rgba(94, 123, 66, 0.92);
+    font-size: 110%;
+    font-weight: bold;
+}
+
+.popup-form p {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin: 10px 0;
+}
+
+.form-input {
+    border: 1px solid rgba(35, 35, 35, 0.89);
+    border-radius: 0;
+    padding: 2px;
+    width: 65%;
+}
+
+.multiple-inputs input {
+    margin-left: 10%;
+    width: 17%;
+}
+
+.multiple-inputs select {
+    width: 47%;
+}
+
+.form-input:focus {
+    border: 2px solid rgba(113, 5, 26, 0.87);
+}
+
+#save-limit-button {
+    display: block;
+    margin: 9% 0 1%;
 }
